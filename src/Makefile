@@ -2,15 +2,16 @@ CC=cc
 CFLAGS=-Wall
 SOURCES=app.c
 EXECUTABLE=app
+BUILDDIR=bin
 
 all: $(EXECUTABLE)
 
-app: bin $(SOURCES)
-	$(CC) $(CFLAGS) $(SOURCES) -o ../bin/$(EXECUTABLE)
+$(EXECUTABLE): $(BUILDDIR) $(SOURCES)
+	$(CC) $(CFLAGS) $(SOURCES) -o $(BUILDDIR)/$(EXECUTABLE)
 
-bin: app.c
-	mkdir -p ../bin
+$(BUILDDIR): $(SOURCES)
+	mkdir -p $(BUILDDIR)
 
 clean:
-	rm -rf ../bin
+	rm -rf $(BUILDDIR)
 
