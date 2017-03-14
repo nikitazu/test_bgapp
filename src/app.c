@@ -13,16 +13,29 @@ struct runCounter_args {
 void runCounter(struct runCounter_args *args);
 
 int main() {
-  pthread_t tid;
-  struct runCounter_args args = {
+  pthread_t tid[2];
+  struct runCounter_args args1 = {
     .prefix = 'a'
   , .val = 0
   };
-  int ptresult = pthread_create(&tid, NULL, ((void * (*)(void *))&runCounter), &args);
+
+  struct runCounter_args args2 = {
+    .prefix = 'b'
+  , .val = 1
+  };
+
+  int ptresult = pthread_create(&tid[0], NULL, ((void * (*)(void *))&runCounter), &args1);
   if (ptresult != 0) {
-    printf("ERROR: failed to create a working thread [%s]\n", strerror(ptresult));
+    printf("ERROR: failed to create a working thread 'a' [%s]\n", strerror(ptresult));
     return 1;
   }
+
+  ptresult = pthread_create(&tid[1], NULL, ((void * (*)(void *))&runCounter), &args2);
+  if (ptresult != 0) {
+    printf("ERROR: failed to create a working thread 'b' [%s]\n", strerror(ptresult));
+    return 1;
+  }
+
   sleep(61);
   return 0;
 }
