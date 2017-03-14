@@ -38,7 +38,9 @@ int main() {
     return 1;
   }
 
-  sleep(61);
+  pthread_join(tid[0], NULL);
+  pthread_join(tid[1], NULL);
+
   return 0;
 }
 
