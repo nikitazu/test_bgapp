@@ -11,9 +11,13 @@ struct runCounter_args {
 };
 
 void runCounter(struct runCounter_args *args);
+int makeCounterThread(pthread_t *tid, struct runCounter_args *args);
+int checkThread(int ptresult, char prefix);
 
 int main() {
+  int ptresult = 0;
   pthread_t tid[2];
+
   struct runCounter_args args1 = {
     .prefix = 'a'
   , .val = 0
@@ -24,15 +28,13 @@ int main() {
   , .val = 1
   };
 
-  int ptresult = pthread_create(&tid[0], NULL, ((void * (*)(void *))&runCounter), &args1);
-  if (ptresult != 0) {
-    printf("ERROR: failed to create a working thread 'a' [%s]\n", strerror(ptresult));
+  ptresult = makeCounterThread(&tid[0], &args1);
+  if (checkThread(ptresult, args1.prefix) != 0) {
     return 1;
   }
 
-  ptresult = pthread_create(&tid[1], NULL, ((void * (*)(void *))&runCounter), &args2);
-  if (ptresult != 0) {
-    printf("ERROR: failed to create a working thread 'b' [%s]\n", strerror(ptresult));
+  ptresult = makeCounterThread(&tid[1], &args2);
+  if (checkThread(ptresult, args2.prefix) != 0) {
     return 1;
   }
 
@@ -48,5 +50,21 @@ void runCounter(struct runCounter_args *args) {
     args->val += 1;
     sleep(1);
   }
+}
+
+int makeCounterThread(pthread_t *tid, struct runCounter_args *args) {
+  return pthread_create(
+    tid
+  , NULL
+  , ((void * (*)(void *))&runCounter)
+  , args
+  );
+}
+
+int checkThread(int ptresult, char prefix) {
+  if (ptresult != 0) {
+    printf("ERROR: failed to create a working thread '%c' [%s]\n", prefix, strerror(ptresult));
+  }
+  return ptresult;
 }
 
