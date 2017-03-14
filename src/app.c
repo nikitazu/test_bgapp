@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <string.h>
+#include <signal.h>
 #include <pthread.h>
 #include <unistd.h>
 
 int counter_max = 60;
+volatile sig_atomic_t signal_stop;
 
 struct runCounter_args {
   char prefix;
@@ -11,10 +13,24 @@ struct runCounter_args {
 };
 
 void runCounter(struct runCounter_args *args);
+
 int makeCounterThread(pthread_t *tid, struct runCounter_args *args);
 int checkThread(int ptresult, char prefix);
 
+void signalStopHandler(int n);
+
+
 int main() {
+  struct sigaction sigAct;
+  sigAct.sa_handler = signalStopHandler;
+  sigAct.sa_flags = 0;
+  sigemptyset(&sigAct.sa_mask);
+
+  if (sigaction(SIGTSTP, &sigAct, NULL) == -1) {
+    printf("ERROR: can't set SIGTSTP handler\n");
+    return 1;
+  }
+
   int ptresult = 0;
   pthread_t tid[2];
 
@@ -37,6 +53,12 @@ int main() {
   if (checkThread(ptresult, args2.prefix) != 0) {
     return 1;
   }
+
+  while (!signal_stop) {
+    sleep(1);
+  }
+
+  printf("got stop signal, but not giving a shit\n");
 
   pthread_join(tid[0], NULL);
   pthread_join(tid[1], NULL);
@@ -68,5 +90,9 @@ int checkThread(int ptresult, char prefix) {
     printf("ERROR: failed to create a working thread '%c' [%s]\n", prefix, strerror(ptresult));
   }
   return ptresult;
+}
+
+void signalStopHandler(int n) {
+  signal_stop = 1;
 }
 
